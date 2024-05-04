@@ -1,12 +1,59 @@
 {% extends 'base.html' %}
 {% block content %}
-  Lorem ipsum dolor sit amet consectetur adipisicing elit. Quod quis, voluptatem, fuga assumenda corporis recusandae optio rerum laboriosam ab, error minima rem natus praesentium mollitia officiis maxime molestias quas qui.
+  Lorem ipsum dolor sit amet consectetur adipisicing elit. Quod quis, voluptatem, fuga assumenda corporis recusandae optio rerum laboriosam ab, error minima rem natus praesentium mollitia officiis maxime molestias quas qui.<div>
+    <video id="video" autoplay></video>
+    {% csrf_token %}
+  </div>
 {% endblock %}
 {% block page_js %}
   <script type="module">
-    import * as Library from '@zxing/library'
+    import { BrowserQRCodeReader } from '@zxing/library'
     
-    // Write main module code here, or as a separate file with a "src" attribute on the module script.
-    console.log(Library)
+    const codeReader = new BrowserQRCodeReader()
+    codeReader
+      .getVideoInputDevices(undefined, 'video')
+      .then((result) => {
+        if (result && result.length) {
+          codeReader
+            .decodeFromInputVideoDevice(result[0].deviceId, 'video')
+            .then((result) => {
+              let qrDataFromReader = result.text
+    
+              // Prepare a post request so it can be sent to the Rails controller
+              let formData = new FormData()
+              formData.append('qr_data', qrDataFromReader)
+              console.log(qrDataFromReader)
+    
+              const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value
+              formData.append('csrfmiddlewaretoken', csrfToken)
+    
+              console.log(formData)
+              // Send QR code data as JSON to the
+              // qr_codes#create action using Rails ujs
+              fetch('/qr_codes', {
+                method: 'POST',
+                body: formData
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  console.log(data)
+                  // Redirect to another page after receiving the response
+                  // window.location.href = "/posts/10";
+                  console.log(data)
+                })
+                .catch((error) => {
+                  console.error('Error:', error)
+                })
+            })
+            .catch((err) => {
+              console.error('Error reading QR code:', err)
+            })
+        } else {
+          console.error('No video input devices found.')
+        }
+      })
+      .catch((err) => {
+        console.error('Error accessing video input devices:', err)
+      })
   </script>
 {% endblock %}
