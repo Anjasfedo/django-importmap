@@ -15,6 +15,9 @@ class Jadwal(models.Model):
     waktu = models.TimeField(default='06:00')  # Default value for finish time is '17:00' (afternoon)
     # Other fields for schedule
     
+    def __str__(self):
+        return self.nama
+    
 class Kelas(models.Model):
     '''Model definition for Class.'''
     name = models.CharField(max_length=20)
@@ -91,3 +94,6 @@ class Absensi(models.Model):
     def save(self, *args, **kwargs):
         self.calculate_status()  # Calculate status before saving
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.akun} - {self.date} - {self.jadwal} - {self.status}'

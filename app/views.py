@@ -41,9 +41,9 @@ def qr_code_check(request):
                 try:
                     absensi = Absensi(akun=akun, jadwal=closest_jadwal)
                     absensi.save()
-                    return JsonResponse({'message': 'QR code data received successfully', 'data': qr_data, 'type': 'success'}, status=200)
+                    return JsonResponse({'message': f'QR code data received successfully {closest_jadwal}', 'data': qr_data, 'type': 'success'}, status=200)
                 except IntegrityError:
-                    return JsonResponse({'message': 'Absensi record already exists for this akun, jadwal, and date combination', 'type': 'failed'}, status=200)
+                    return JsonResponse({'message': f'Absensi record already exists for this akun, jadwal, and date combination {closest_jadwal}', 'type': 'failed'}, status=200)
             else:
                 return JsonResponse({'message': 'Jadwal not found', 'type': 'failed'}, status=200)
         else:
@@ -65,7 +65,7 @@ def render_pdf_view(request):
         name = akun_instance.name
         nisn = akun_instance.nisn
         # Generate the hash
-        qr_code_hash = akun_instance.generate_hash()
+        qr_code_hash = akun_instance.qr_hash
 
         context = {
             'qr_code': qr_code_hash,
