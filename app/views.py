@@ -32,10 +32,17 @@ def qr_code_check(request):
         # Generate the hash
         qr_code_hash = akun_instance.generate_hash()
 
-        if qr_data == qr_code_hash:
-            return JsonResponse({'message': 'QR code data received successfully', 'data': qr_data, 'type': 'success'}, status=200)
+        if 'qr_data_checked' not in request.session:  # Check if QR data has already been checked
+            # Store the fact that the QR data has been checked in the session
+            request.session['qr_data_checked'] = True
+
+            if qr_data == qr_code_hash:
+                return JsonResponse({'message': 'QR code data received successfully', 'data': qr_data, 'type': 'success'}, status=200)
+            else:
+                return JsonResponse({'message': 'QR code data false', 'data': qr_data, 'type': 'failed'}, status=200)
+
         else:
-            return JsonResponse({'message': 'QR code data false', 'data': qr_data, 'type': 'failed'}, status=200)
+            return JsonResponse({'message': 'QR code data already checked', 'data': qr_data, 'type': 'already_checked'}, status=200)
 
     else:
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=400)

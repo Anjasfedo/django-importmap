@@ -2,7 +2,8 @@
 {% load qr_code %}
 {% load static %}
 {% block content %}
-  {% comment %} <video id="video" style="height: 30rem; width: 40rem;" autoplay></video> {% endcomment %}
+  <video id="video" style="height: 30rem; width: 40rem;" autoplay></video>
+
   {% csrf_token %}
   {% comment %} {% qr_from_text qr_code error_correction='m' size=12 version=10 %} {% endcomment %}
 
@@ -47,7 +48,7 @@
           const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value
           formData.append('csrfmiddlewaretoken', csrfToken)
     
-          const response = await fetch('/qr_codes', {
+          const response = await fetch('/qr_codes/', {
             method: 'POST',
             body: formData
           })
@@ -82,6 +83,6 @@
     }
     
     // Start QR code scan initially
-    {% comment %} startQRCodeScan() {% endcomment %}
+    startQRCodeScan()
   </script>
 {% endblock %}

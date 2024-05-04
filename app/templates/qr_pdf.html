@@ -1,50 +1,50 @@
-{% load qr_code %}
 {% load static %}
-
+{% load qr_code %}
 <html lang="en">
-  <head>
+<head>
+
     <style>
-    @page {
-    size: a4;
-    background-image: url("{% static 'img/img-blank.png' %}");
-    background-position: left bottom; /* Example of background-object-position */
-    background-height: 700px;
-    background-width: 700px;
-    background-object-position: 60px 230px;
-    @frame header_frame {           /* Static Frame */
-        -pdf-frame-content: header_content;
-        left: 50pt; width: 512pt; top: 50pt; height: 40pt;
-        -pdf-frame-border: 1;
-    }
-    @frame content_frame {          /* Content Frame */
-        left: 50pt; width: 512pt; top: 90pt; height: 632pt;
-        -pdf-frame-border: 1;
-    }
-    @frame footer_frame {           /* Another static Frame */
-        -pdf-frame-content: footer_content;
-        left: 50pt; width: 512pt; top: 772pt; height: 20pt;
-        -pdf-frame-border: 1;
-    }
-    }
-    
-    /* CSS styling for name and NISN */
-.info-container {
-        text-align: center;
-        margin-top: 20px;
-    }
+        @page {
+            size: a4;
+            background-image: url("{% static 'img/img-blank.png' %}");
+            background-position: left bottom; /* Example of background-object-position */
+            background-height: 700px;
+            background-width: 700px;
+            background-object-position: 60px 230px;
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                left: 50pt; width: 512pt; top: 50pt; height: 40pt;
+                -pdf-frame-border: 1;
+            }
+            @frame content_frame {
+                left: 50pt; width: 512pt; top: 90pt; height: 632pt;
+                -pdf-frame-border: 1;
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                -pdf-frame-border: 1;
+            }
+        }
+        
+/* CSS styling for name and NISN */
+        .info-container {
+            text-align: center;
+            margin-top: 20px;
+        }
 
-    .info-container h2 {
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
+        .info-container h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
 
-    .info-container p {
-        font-size: 18px;
-        color: #666;
-    }
+        .info-container p {
+            font-size: 18px;
+            color: #666;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <!-- Content for Static Frame 'header_frame' -->
     <div id="header_content">QR Code PDF</div>
 
@@ -53,15 +53,14 @@
 
     <!-- HTML Content -->
     <div class="info-container">
-        <h2>Name: 
-            {{name}}
-        </h2>
-        <p>NISN: 
-            {{nisn}}
-        </p>
+        <h2>Name: {{name}}</h2>
+        <p>NISN: {{nisn}}</p>
+
+        <div class="">
+            <img src="{% qr_url_from_text qr_code image_format='png' error_correction='m' size=5 version=10 %}" alt="QR Code" class="" />
+        </div>
     </div>
 
     <!-- QR Code Image -->
-    <img src="{% qr_url_from_text qr_code image_format='png' error_correction='m' size=5 version=10 %}" alt="QR Code" class="img-fluid" />
-  </body>
+</body>
 </html>
