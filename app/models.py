@@ -11,8 +11,8 @@ from .helpers import max_value_current_year, get_current_time
 SECRET_KEY = 'f46facdb5eec53ed5e8ec71490e8e1b030ea7dcd449f06653305ab4a1df949eb'
 
 class Jadwal(models.Model):
-    masuk = models.TimeField(default='08:00')  # Default value for start time is '08:00' (morning)
-    pulang = models.TimeField(default='17:00')  # Default value for finish time is '17:00' (afternoon)
+    nama = models.CharField(max_length=20, null=True)
+    waktu = models.TimeField(default='06:00')  # Default value for finish time is '17:00' (afternoon)
     # Other fields for schedule
     
 class Kelas(models.Model):
@@ -37,7 +37,7 @@ class Akun(models.Model):
     nisn = models.PositiveIntegerField(
         validators=[MinValueValidator(100), MaxValueValidator(200)])
     # One to one with User
-    kelas = models.OneToOneField(Kelas, on_delete=models.CASCADE, null=True)
+    kelas = models.ForeignKey(Kelas, on_delete=models.CASCADE, null=True)
     qr_hash = models.CharField(max_length=255, null=True)
 
     class Meta:
@@ -53,6 +53,7 @@ class Akun(models.Model):
         hex_dig = hash_object.hexdigest()
         return hex_dig
     
+    @classmethod
     def get_akun_by_hash(cls, hash_value):
         try:
             return cls.objects.get(qr_hash=hash_value)
@@ -75,10 +76,18 @@ class Absensi(models.Model):
     time = models.TimeField(default=get_current_time)
     status = models.CharField(max_length=10, choices=[
                               ('hadir', 'Hadir'), ('absen', 'Absen')])
+    
+    class Meta:
+        # Define unique constraint for combination of jadwal and date
+        unique_together = ('akun', 'jadwal', 'date')
 
     def calculate_status(self):
         current_time = datetime.datetime.now().time()
-        if self.jadwal.masuk <= current_time <= self.jadwal.pulang:
+        if self.jadwal.waktu <= current_time:
             self.status = 'absen'
         else:
             self.status = 'hadir'
+            
+    def save(self, *args, **kwargs):
+        self.calculate_status()  # Calculate status before saving
+        super().save(*args, **kwargs)
