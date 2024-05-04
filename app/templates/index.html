@@ -1,12 +1,18 @@
 {% extends 'base.html' %}
 {% load qr_code %}
 {% block content %}
-  <video id="video" style="height: 30rem; width: 40rem;" autoplay></video>
+  {% comment %} <video id="video" style="height: 30rem; width: 40rem;" autoplay></video> {% endcomment %}
 
   {% csrf_token %}
   {% comment %} {% qr_from_text qr_code error_correction='m' size=12 version=10 %} {% endcomment %}
 
-  <img src="{% qr_url_from_text qr_code image_format='png' error_correction='m' size=5 version=10 %}" alt="Hello World!" />
+{% if user.is_authenticated %}
+    <!-- If the user is authenticated, display the QR code -->
+    <img src="{% qr_url_from_text qr_code image_format='png' error_correction='m' size=5 version=10 %}" alt="QR Code" />
+{% else %}
+    <!-- If the user is not authenticated, display a message to login -->
+    <img src="#" alt="Login Required: Please login to access the QR code" />
+{% endif %}
 {% endblock %}
 {% block page_js %}
   <script type="module">
@@ -74,6 +80,6 @@
     }
     
     // Start QR code scan initially
-    startQRCodeScan()
+    {% comment %} startQRCodeScan() {% endcomment %}
   </script>
 {% endblock %}
