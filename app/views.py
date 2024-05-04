@@ -14,6 +14,10 @@ def qr_code_create(request):
         # Lakukan sesuatu dengan qr_data, seperti menyimpannya ke database
         # Misalnya:
         # QRCode.objects.create(data=qr_data)
-        return JsonResponse({'message': 'QR code data received successfully', 'data': qr_data}, status=200)
+        if qr_data == 'Quo veniam ducimus312312323':
+            return JsonResponse({'message': 'QR code data received successfully', 'data': qr_data, 'type': 'success'}, status=200)
+        else:
+            return JsonResponse({'message': 'QR code data false', 'data': qr_data, 'type': 'failed'}, status=200)
+            
     else:
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=400)

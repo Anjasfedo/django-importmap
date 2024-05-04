@@ -9,51 +9,115 @@
   <script type="module">
     import { BrowserQRCodeReader } from '@zxing/library'
     
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 8000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer
+        toast.onmouseleave = Swal.resumeTimer
+      }
+    })
+    
     const codeReader = new BrowserQRCodeReader()
-    codeReader
-      .getVideoInputDevices(undefined, 'video')
-      .then((result) => {
-        if (result && result.length) {
-          codeReader
-            .decodeFromInputVideoDevice(result[0].deviceId, 'video')
-            .then((result) => {
-              let qrDataFromReader = result.text
+    const startQRCodeScan = () => {
+      codeReader
+        .getVideoInputDevices(undefined, 'video')
+        .then((result) => {
+          if (result && result.length) {
+            codeReader
+              .decodeFromInputVideoDevice(result[0].deviceId, 'video')
+              .then((result) => {
+                let qrDataFromReader = result.text
     
-              // Prepare a post request so it can be sent to the Rails controller
-              let formData = new FormData()
-              formData.append('qr_data', qrDataFromReader)
-              console.log(qrDataFromReader)
+                // Prepare a post request so it can be sent to the
+                // qr_codes#create action using Rails ujs
+                let formData = new FormData()
+                formData.append('qr_data', qrDataFromReader)
     
-              const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value
-              formData.append('csrfmiddlewaretoken', csrfToken)
+                const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value
+                formData.append('csrfmiddlewaretoken', csrfToken)
     
-              console.log(formData)
-              // Send QR code data as JSON to the
-              // qr_codes#create action using Rails ujs
-              fetch('/qr_codes', {
-                method: 'POST',
-                body: formData
+                // Send QR code data as JSON to the qr_codes#create action
+                // using Rails ujs
+                fetch('/qr_codes', {
+                  method: 'POST',
+                  body: formData
+                })
+                  .then((response) => {
+                    if (!response.ok) {
+                      throw new Error('Network response was not ok')
+                    }
+                    return response.json()
+                  })
+                  .then((data) => {
+                    // Show response using SweetAlert toast
+    
+                    Toast.fire({
+                      icon: data.type === 'success' ? 'success' : 'error',
+                      title: data.message
+                    })
+    
+                    console.log(data)
+    
+                    // Restart QR code scan after showing toast
+                    startQRCodeScan()
+                  })
+                  .catch((error) => {
+                    console.error('Error:', error)
+                    // Show error toast using SweetAlert
+    
+                    Toast.fire({
+                      icon: 'error',
+                      title: 'An error occurred. Please try again later.'
+                    })
+    
+                    // Restart QR code scan after showing toast
+                    startQRCodeScan()
+                  })
               })
-                .then((response) => response.json())
-                .then((data) => {
-                  console.log(data)
-                  // Redirect to another page after receiving the response
-                  // window.location.href = "/posts/10";
-                  console.log(data)
+              .catch((err) => {
+                console.error('Error reading QR code:', err)
+                // Show error toast using SweetAlert
+    
+                Toast.fire({
+                  icon: 'error',
+                  title: 'Error reading QR code. Please try again.'
                 })
-                .catch((error) => {
-                  console.error('Error:', error)
-                })
+    
+                // Restart QR code scan after showing toast
+                startQRCodeScan()
+              })
+          } else {
+            console.error('No video input devices found.')
+            // Show error toast using SweetAlert
+    
+            Toast.fire({
+              icon: 'error',
+              title: 'No video input devices found.'
             })
-            .catch((err) => {
-              console.error('Error reading QR code:', err)
-            })
-        } else {
-          console.error('No video input devices found.')
-        }
-      })
-      .catch((err) => {
-        console.error('Error accessing video input devices:', err)
-      })
+    
+            // Restart QR code scan after showing toast
+            startQRCodeScan()
+          }
+        })
+        .catch((err) => {
+          console.error('Error accessing video input devices:', err)
+          // Show error toast using SweetAlert
+    
+          Toast.fire({
+            icon: 'error',
+            title: 'Error accessing video input devices. Please try again.'
+          })
+    
+          // Restart QR code scan after showing toast
+          startQRCodeScan()
+        })
+    }
+    
+    // Start QR code scan initially
+    startQRCodeScan()
   </script>
 {% endblock %}
