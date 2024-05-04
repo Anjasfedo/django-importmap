@@ -6,7 +6,9 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 
 from .helpers import link_callback
-from .models import Akun
+from .models import Akun, Jadwal, Absensi
+
+from django.utils import timezone
 
 # View
 
@@ -14,7 +16,7 @@ from .models import Akun
 def index(request):
     akun_instance = Akun.objects.first()
 
-    qr_code_hash = akun_instance.generate_hash()
+    qr_code_hash = akun_instance.qr_hash
 
     context = {
         'qr_code': qr_code_hash
@@ -32,7 +34,8 @@ def qr_code_check(request):
         # Generate the hash
         qr_code_hash = akun_instance.generate_hash()
 
-        if 'qr_data_checked' not in request.session:  # Check if QR data has already been checked
+        # Check if QR data has already been checked
+        if request.session['qr_data_checked'] == False:
             # Store the fact that the QR data has been checked in the session
             request.session['qr_data_checked'] = True
 
@@ -42,11 +45,31 @@ def qr_code_check(request):
                 return JsonResponse({'message': 'QR code data false', 'data': qr_data, 'type': 'failed'}, status=200)
 
         else:
+
+            request.session['qr_data_checked'] = False
             return JsonResponse({'message': 'QR code data already checked', 'data': qr_data, 'type': 'already_checked'}, status=200)
 
     else:
         return JsonResponse({'error': 'Only POST requests are allowed'}, status=400)
 
+
+def mark_attendance(request, hash_value):
+    akun = Akun.get_akun_by_hash(hash_value)
+    if akun:
+        now = timezone.now().time()
+        closest_jadwal = Jadwal.objects.filter(
+            start_time__gte=now).order_by('start_time').first()
+        if closest_jadwal:
+            absensi = Absensi(akun=akun, jadwal=closest_jadwal)
+            absensi.calculate_status()
+            absensi.save()
+            return HttpResponse(f"Absensi marked for {akun.user.username} in {closest_jadwal}")
+        else:
+            return HttpResponse("No upcoming jadwals found")
+    else:
+        return HttpResponse("Akun not found")
+
+# Render PDF
 
 def render_pdf_view(request):
     template_path = 'qr_pdf.html'
