@@ -17,15 +17,9 @@ def link_callback(uri, rel, request):
     HOSTNAME = get_current_host(request)
 
     qr_code_image_path = '/qr-code-image/'  # QR code image path
-    static_url = settings.STATIC_URL          # Typically /static/
 
-    if uri.startswith(qr_code_image_path):
-        # If URI starts with /qr-code-image/, return the full URI with the host
-        return f"{HOSTNAME}{uri}"
-    elif uri.startswith(static_url):
-        # If URI starts with /static/, construct the absolute path for static files
-        path = uri.replace(static_url, "")
-        return os.path.join(settings.STATIC_ROOT, path)
+    # if uri.startswith(qr_code_image_path):
+    #     # If URI starts with /qr-code-image/, return the full URI with the host
+    #     return f"{HOSTNAME}{uri}"
 
-    # If URI doesn't start with /qr-code-image/ or /static/, return the full URI with the host
     return f"{HOSTNAME}{uri}"

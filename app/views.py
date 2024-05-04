@@ -46,22 +46,34 @@ def render_pdf_view(request):
 
     akun_instance = Akun.objects.first()  # Or retrieve it based on some condition
 
-    # Generate the hash
-    qr_code_hash = akun_instance.generate_hash()
+    # Ensure akun_instance exists before proceeding
+    if akun_instance:
+        # Get the name and NISN from the Akun instance
+        name = akun_instance.name
+        nisn = akun_instance.nisn
+        # Generate the hash
+        qr_code_hash = akun_instance.generate_hash()
 
-    context = {'qr_code': qr_code_hash}
+        context = {
+            'qr_code': qr_code_hash,
+            'name': name,
+            'nisn': nisn
+        }
 
-    # Create a Django response object, and specify content_type as pdf
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+        # Create a Django response object, and specify content_type as pdf
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{name}.pdf"'
 
-    template = get_template(template_path)
-    html = template.render(context)
+        template = get_template(template_path)
+        html = template.render(context)
 
-    pisa_status = pisa.CreatePDF(
-        html, dest=response, link_callback=lambda uri, rel: link_callback(uri, rel, request))
+        pisa_status = pisa.CreatePDF(
+            html, dest=response, link_callback=lambda uri, rel: link_callback(uri, rel, request))
 
-    # if error then show some funny view
-    if pisa_status.err:
-        return HttpResponse('We had some errors <pre>' + html + '</pre>')
-    return response
+        # if error then show some funny view
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        return response
+    else:
+        # Handle case where no Akun instance is found
+        return HttpResponse('No Akun instance found')

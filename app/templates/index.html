@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% load qr_code %}
+{% load static %}
 {% block content %}
   {% comment %} <video id="video" style="height: 30rem; width: 40rem;" autoplay></video> {% endcomment %}
-
   {% csrf_token %}
   {% comment %} {% qr_from_text qr_code error_correction='m' size=12 version=10 %} {% endcomment %}
 
@@ -13,6 +13,8 @@
     <!-- If the user is not authenticated, display a message to login -->
     <img src="#" alt="Login Required: Please login to access the QR code" />
 {% endif %}
+
+<img src="{% static "img/img-blank.png" %}" alt="">
 {% endblock %}
 {% block page_js %}
   <script type="module">
