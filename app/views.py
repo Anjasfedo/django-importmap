@@ -2,23 +2,25 @@ from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import get_template
 from django.db import IntegrityError
-import datetime
+from django.shortcuts import get_object_or_404
 
 from xhtml2pdf import pisa
 
 from .helpers import link_callback
 from .models import Akun, Jadwal, Absensi
-
 # View
 
 
-def index(request):
-    akun_instance = Akun.objects.get(pk=2)
+def index(request, jadwal):
+    # Get the Jadwal object based on the jadwal parameter
+    jadwal_object = get_object_or_404(Jadwal, nama__iexact=jadwal)
 
+    akun_instance = Akun.objects.get(pk=2)
     qr_code_hash = akun_instance.qr_hash
 
     context = {
-        'qr_code': qr_code_hash
+        'qr_code': qr_code_hash,
+        'jadwal': jadwal_object
     }
 
     return render(request, 'index.html', context)
@@ -27,23 +29,21 @@ def index(request):
 def qr_code_check(request):
     if request.method == 'POST':
         qr_data = request.POST.get('qr_data')
+        jadwal_name = request.POST.get('jadwal')
 
         akun = Akun.get_akun_by_hash(qr_data)
 
         if akun:
-            now = datetime.datetime.now().strftime('%H:%M:%S')
+            now_jadwal = Jadwal.objects.filter(
+                nama__iexact=jadwal_name).latest('waktu')
 
-            closest_jadwal = Jadwal.objects.filter(
-                waktu__gte=now
-            ).order_by('waktu').first()
-
-            if closest_jadwal:
+            if now_jadwal:
                 try:
-                    absensi = Absensi(akun=akun, jadwal=closest_jadwal)
+                    absensi = Absensi(akun=akun, jadwal=now_jadwal)
                     absensi.save()
-                    return JsonResponse({'message': f'QR code data received successfully {closest_jadwal}', 'data': qr_data, 'type': 'success'}, status=200)
+                    return JsonResponse({'message': f'QR code data received successfully {now_jadwal}', 'data': qr_data, 'type': 'success'}, status=200)
                 except IntegrityError:
-                    return JsonResponse({'message': f'Absensi record already exists for this akun, jadwal, and date combination {closest_jadwal}', 'type': 'failed'}, status=200)
+                    return JsonResponse({'message': f'Absensi record already exists for this akun, jadwal, and date combination {now_jadwal}', 'type': 'failed'}, status=200)
             else:
                 return JsonResponse({'message': 'Jadwal not found', 'type': 'failed'}, status=200)
         else:
@@ -57,7 +57,7 @@ def qr_code_check(request):
 def render_pdf_view(request):
     template_path = 'qr_pdf.html'
 
-    akun_instance = Akun.objects.first()  # Or retrieve it based on some condition
+    akun_instance = Akun.objects.get(pk=1)  # Or retrieve it based on some condition
 
     # Ensure akun_instance exists before proceeding
     if akun_instance:

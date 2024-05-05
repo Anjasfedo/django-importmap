@@ -2,19 +2,26 @@
 {% load qr_code %}
 {% load static %}
 {% block content %}
-  <video id="video" style="height: 30rem; width: 40rem;" autoplay></video>
-
-  {% csrf_token %}
-  {% comment %} {% qr_from_text qr_code error_correction='m' size=12 version=10 %} {% endcomment %}
-
-{% if user.is_authenticated %}
+  {% if user.is_authenticated %}
     <!-- If the user is authenticated, display the QR code -->
-    <img src="{% qr_url_from_text qr_code image_format='png' error_correction='m' size=5 version=10 %}" alt="QR Code" />
-{% else %}
+    {% if jadwal %}
+      <video id="video" style="height: 30rem; width: 40rem;" autoplay></video>
+
+      {% csrf_token %}
+      <div>
+        <img src="{% qr_url_from_text qr_code image_format='png' error_correction='m' size=5 version=10 %}" alt="QR Code" />
+      </div>
+    {% else %}
+      <!-- Display a message and provide a link to return back -->
+      <div>
+        <p>Invalid jadwal. Please go back.</p>
+        <a href="">Go back</a>
+      </div>
+    {% endif %}
+  {% else %}
     <!-- If the user is not authenticated, display a message to login -->
     <img src="#" alt="Login Required: Please login to access the QR code" />
-{% endif %}
-
+  {% endif %}
 {% endblock %}
 {% block page_js %}
   <script type="module">
@@ -46,6 +53,8 @@
     
           const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value
           formData.append('csrfmiddlewaretoken', csrfToken)
+    
+          formData.append('jadwal', '{{ jadwal }}')
     
           const response = await fetch('/qr_codes/', {
             method: 'POST',

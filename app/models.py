@@ -83,13 +83,21 @@ class Absensi(models.Model):
     class Meta:
         # Define unique constraint for combination of jadwal and date
         unique_together = ('akun', 'jadwal', 'date')
-
+    
     def calculate_status(self):
         current_time = datetime.datetime.now().time()
-        if self.jadwal.waktu <= current_time:
-            self.status = 'absen'
-        else:
-            self.status = 'hadir'
+        jadwal_time = self.jadwal.waktu
+
+        if self.jadwal.nama.lower() == 'masuk':
+            if current_time < jadwal_time:  # If current time is before the jadwal time
+                self.status = 'hadir'
+            else:
+                self.status = 'absen'
+        elif self.jadwal.nama.lower() == 'pulang':
+            if current_time < jadwal_time:  # If current time is before the jadwal time
+                self.status = 'absen'
+            else:
+                self.status = 'hadir'
             
     def save(self, *args, **kwargs):
         self.calculate_status()  # Calculate status before saving
